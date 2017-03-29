@@ -29,6 +29,7 @@ func dial(cmd *cobra.Command, args []string) error {
 
 	data, _ := ioutil.ReadAll(httpResp.Body)
 	fmt.Fprintf(color.Output, "%s %s : %s\n", color.GreenString("Dial response from"), args[0], data)
+	fmt.Fprintf(color.Output, "%s %s\n", color.YellowString("You can now send messages and files to"), args[0])
 
 	return nil
 }
