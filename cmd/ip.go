@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
-	"os/exec"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -17,15 +15,12 @@ var ipCmd = &cobra.Command{
 }
 
 func ip(cmd *cobra.Command, args []string) error {
-	bashCmd := exec.Command("curl", "ipecho.net/plain")
-	var out bytes.Buffer
-	bashCmd.Stdout = &out
-	err := bashCmd.Run()
+	ipAddr, err := getIP()
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(color.Output, "%s : %s\n", color.GreenString("Your public IP address"), out.String())
+	fmt.Fprintf(color.Output, "%s : %s\n", color.GreenString("Your public IP address"), ipAddr)
 	return nil
 }
 

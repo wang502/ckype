@@ -11,8 +11,20 @@ import (
 	"io/ioutil"
 	"log"
 
+	"time"
+
+	"encoding/json"
+
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/wang502/ckype/server"
 )
+
+// ----------------------------------------------------
+//
+// Send File
+//
+// ----------------------------------------------------
 
 var sendFileCmd = &cobra.Command{
 	Use:   "send_file",
@@ -42,7 +54,7 @@ func sendFile(cmd *cobra.Command, args []string) error {
 	}
 	w.Close()
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s/sendFile", ip), &b)
+	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:3000/sendFile", ip), &b)
 	if err != nil {
 		return err
 	}
@@ -61,6 +73,57 @@ func sendFile(cmd *cobra.Command, args []string) error {
 	return err
 }
 
+// ----------------------------------------------------
+//
+// Send Message
+//
+// ----------------------------------------------------
+
+var sendMsgCmd = &cobra.Command{
+	Use:   "sendmsg",
+	Short: "Send message to your mate",
+	Long:  `Send message to your mate`,
+	RunE:  sendMsg,
+}
+
+func sendMsg(cmd *cobra.Command, args []string) error {
+	to, message := args[0], args[1]
+	fmt.Fprintf(color.Output, "%s: %s\n", color.GreenString("Message"), message)
+	from, err := getIP()
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(color.Output, "%s: %s\n", color.GreenString("Sending message from"), from)
+	fmt.Fprintf(color.Output, color.GreenString("Sending message...\n"))
+
+	// prepare message
+	msg := &server.Message{
+		Content: message,
+		Time:    time.Now().Unix(),
+		From:    from,
+	}
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	var buf bytes.Buffer
+	buf.Write(data)
+	resp, err := httpClient.Post(fmt.Sprintf("http://%s:3000/sendMsg", to), "ckype", &buf)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		err = fmt.Errorf("bad status: %s", resp.Status)
+		return err
+	}
+
+	fmt.Fprintf(color.Output, color.GreenString("Message sent successfully!\n"))
+	return nil
+}
+
 func init() {
 	baseCmd.AddCommand(sendFileCmd)
+	baseCmd.AddCommand(sendMsgCmd)
 }
