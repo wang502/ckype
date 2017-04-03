@@ -21,6 +21,7 @@ var baseCmd = &cobra.Command{
 var routineGroup sync.WaitGroup
 var httpClient = http.Client{Timeout: time.Second}
 
+// Execute is wrapper of base command
 func Execute() {
 	if err := baseCmd.Execute(); err != nil {
 		fmt.Println(err)

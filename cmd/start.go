@@ -37,7 +37,7 @@ func start(cmd *cobra.Command, args []string) error {
 }
 
 func daemon(cmd *cobra.Command, args []string) error {
-	strCmd := "nohup ./ckype start &"
+	strCmd := "./ckype start &"
 	out, err := exec.Command("sh", "-c", strCmd).Output()
 	if err != nil {
 		return err

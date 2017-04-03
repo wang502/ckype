@@ -114,6 +114,7 @@ func sendMsg(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		err = fmt.Errorf("bad status: %s", resp.Status)
 		return err

@@ -75,7 +75,7 @@ func handleSendFile(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		// 32K buffer copy
+		// buffer copy
 		var written int64
 		if written, err = io.Copy(outfile, part); nil != err {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
