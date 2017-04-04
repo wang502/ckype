@@ -8,11 +8,11 @@ import (
 	"crypto/x509"
 )
 
-// encrypt ckype message using RSA
-func rsaEncrypt(message, dir string) ([]byte, error) {
+// RsaEncrypt encrypts ckype message using RSA
+func RsaEncrypt(message, dir string) ([]byte, error) {
 	var res []byte
 
-	pemBytes, err := readPemFile(dir)
+	pemBytes, err := ReadPemFile(dir)
 	if err != nil {
 		return res, err
 	}
@@ -31,11 +31,11 @@ func rsaEncrypt(message, dir string) ([]byte, error) {
 	return rsa.EncryptOAEP(sha256.New(), rng, pub.(*rsa.PublicKey), secretMessage, label)
 }
 
-// decrypt ckype message
-func rsaDecrpt(ciphertext []byte, dir string) (string, error) {
+// RsaDecrypt decrypt ckype message
+func RsaDecrypt(ciphertext []byte, dir string) (string, error) {
 	label := []byte("orders")
 
-	pemBytes, err := readPemFile(dir)
+	pemBytes, err := ReadPemFile(dir)
 	if err != nil {
 		return "", err
 	}
@@ -57,11 +57,11 @@ func rsaDecrpt(ciphertext []byte, dir string) (string, error) {
 	return string(plaintext), nil
 }
 
-// calculates the RSA signature of of hashed message
-func sign(message, dir string) ([]byte, error) {
+// Sign calculates the RSA signature of of hashed message
+func Sign(message, dir string) ([]byte, error) {
 	var signature []byte
 
-	pemBytes, err := readPemFile(dir)
+	pemBytes, err := ReadPemFile(dir)
 	if err != nil {
 		return signature, err
 	}
@@ -76,9 +76,9 @@ func sign(message, dir string) ([]byte, error) {
 	return rsa.SignPKCS1v15(rng, privateKey, crypto.SHA256, hashed[:])
 }
 
-// verify the RSA signature of hashed message
-func verify(message [32]byte, signature []byte, dir string) error {
-	pemBytes, err := readPemFile(dir)
+// Verify verifies the RSA signature of hashed message
+func Verify(message [32]byte, signature []byte, dir string) error {
+	pemBytes, err := ReadPemFile(dir)
 	if err != nil {
 		return err
 	}

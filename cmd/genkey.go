@@ -23,22 +23,39 @@ var genPubCmd = &cobra.Command{
 }
 
 func genPrivateKey(cmd *cobra.Command, args []string) error {
-	cmdStr := "openssl genrsa -out private_key.pem"
-	_, err := exec.Command("sh", "-c", cmdStr).Output()
+	fmt.Println("Generating private key....")
+
+	destDir := fmt.Sprintf("%s/my_private_key.pem", pemDir)
+	command := fmt.Sprintf("openssl genrsa -out %s 2048", destDir)
+	_, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(color.Output, "%s \"%s\"\n", color.GreenString("An RSA private key is generated in"), "private_key.pem")
+
+	fmt.Fprintf(color.Output, "%s %s\n", "An RSA private key is generated in", color.GreenString(destDir))
+	fmt.Println("...")
+	fmt.Println("[Done]")
 	return nil
 }
 
 func genPublicKey(cmd *cobra.Command, args []string) error {
-	cmdStr := "openssl rsa -pubout -in private_key.pem -out public_key.pem"
-	_, err := exec.Command("sh", "-c", cmdStr).Output()
+	fmt.Println("Generating public key....")
+
+	// path of existing private ket pem file
+	privateDir := fmt.Sprintf("%s/my_private_key.pem", pemDir)
+
+	// destination directory of public key pem file
+	pubDir := fmt.Sprintf("%s/my_public_key.pem", pemDir)
+
+	command := fmt.Sprintf("openssl rsa -pubout -in %s -out %s", privateDir, pubDir)
+	_, err := exec.Command("sh", "-c", command).Output()
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(color.Output, "%s \"%s\" based on your \"private_key.pem\"\n", color.GreenString("An RSA public key is generated in"), "public_key.pem")
+
+	fmt.Fprintf(color.Output, "%s %s based on your private key in %s\n", "An RSA public key is generated in", color.GreenString(pubDir), color.GreenString(privateDir))
+	fmt.Println("...")
+	fmt.Println("[Done]")
 	return nil
 }
 

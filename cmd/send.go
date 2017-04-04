@@ -7,16 +7,14 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"time"
 
 	"io/ioutil"
 	"log"
 
-	"time"
-
-	"encoding/json"
-
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/wang502/ckype/encryption"
 	"github.com/wang502/ckype/server"
 )
 
@@ -88,6 +86,15 @@ var sendMsgCmd = &cobra.Command{
 
 func sendMsg(cmd *cobra.Command, args []string) error {
 	to, message := args[0], args[1]
+
+	// encrypt message
+	/*
+		ciphertext, err := encryption.RsaEncrypt(message, fmt.Sprintf("%s/public_key.pem", pemDir))
+		if err != nil {
+			return err
+		}
+	*/
+
 	fmt.Fprintf(color.Output, "%s: %s\n", color.GreenString("Message"), message)
 	from, err := getIP()
 	if err != nil {
@@ -102,13 +109,20 @@ func sendMsg(cmd *cobra.Command, args []string) error {
 		Time:    time.Now().Unix(),
 		From:    from,
 	}
-	data, err := json.Marshal(msg)
+	/*
+		data, err := json.Marshal(msg)
+		if err != nil {
+			return err
+		}
+	*/
+	ciphertext, err := encryption.RsaEncrypt(msg.String(), fmt.Sprintf("%s/public_key.pem", pemDir))
 	if err != nil {
 		return err
 	}
 
 	var buf bytes.Buffer
-	buf.Write(data)
+	//buf.Write(data)
+	buf.Write(ciphertext)
 	resp, err := httpClient.Post(fmt.Sprintf("http://%s:3000/sendMsg", to), "ckype", &buf)
 	if err != nil {
 		return err
@@ -120,7 +134,7 @@ func sendMsg(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Fprintf(color.Output, color.GreenString("Message sent successfully!\n"))
+	fmt.Fprintf(color.Output, color.GreenString("Message is received successfully!\n"))
 	return nil
 }
 

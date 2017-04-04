@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"net"
@@ -14,9 +15,16 @@ import (
 
 	"io/ioutil"
 
-	"encoding/json"
+	"bytes"
 
+	"github.com/fatih/color"
 	"github.com/gorilla/mux"
+	"github.com/wang502/ckype/encryption"
+)
+
+var (
+	hashedDialMessage = sha256.Sum256([]byte("dial"))
+	pemDir, _         = encryption.GetSnippetDir()
 )
 
 // Message represents a message sent in ckype
@@ -44,7 +52,27 @@ func (m *Message) String() string {
 
 func respondDial(w http.ResponseWriter, req *http.Request) {
 	log.Println("[DEBUG]")
-	fmt.Fprintf(w, "OK")
+	var b bytes.Buffer
+	_, err := io.Copy(&b, req.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	log.Printf("encrypted dial message: %s", b.Bytes())
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err = encryption.Verify(hashedDialMessage, b.Bytes(), filepath.Join(pemDir, "public_key.pem")); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// verified, respond with "Verified"
+	log.Printf("[Dial] Dial request is Verified")
+	fmt.Fprintf(w, "Verified")
 }
 
 func handleSendFile(w http.ResponseWriter, req *http.Request) {
@@ -86,6 +114,7 @@ func handleSendFile(w http.ResponseWriter, req *http.Request) {
 }
 
 func handleSendMsg(w http.ResponseWriter, req *http.Request) {
+	fmt.Printf("[1]Received a message...\n")
 	data, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -93,13 +122,30 @@ func handleSendMsg(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// parse message
-	msg := &Message{}
-	if err := json.Unmarshal(data, msg); err != nil {
+	/*
+		msg := &Message{}
+		if err := json.Unmarshal(data, msg); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	*/
+
+	fmt.Printf("[2]Decrypting the message...\n")
+	//secretContent := msg.Content
+	//decryptedContent, err := encryption.RsaDecrypt([]byte(secretContent), fmt.Sprintf("%s/my_private_key.pem", pemDir))
+
+	decryptedContent, err := encryption.RsaDecrypt(data, fmt.Sprintf("%s/my_private_key.pem", pemDir))
+	if err != nil {
+		log.Printf("%s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Printf("%s", msg)
+	/*
+		msg.Content = decryptedContent
+		fmt.Printf("%s", msg)
+	*/
+	fmt.Fprintf(color.Output, "%s\n", color.GreenString(decryptedContent))
 	return
 }
 

@@ -20,6 +20,7 @@ var baseCmd = &cobra.Command{
 
 var routineGroup sync.WaitGroup
 var httpClient = http.Client{Timeout: time.Second}
+var pemDir, _ = getSnippetDir()
 
 // Execute is wrapper of base command
 func Execute() {
